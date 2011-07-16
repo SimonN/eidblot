@@ -16,7 +16,7 @@ OBJDIR   := obj
 DEPDIR   := $(OBJDIR)
 BINDIR   := bin
 
-CLIENT_BIN  := $(BINDIR)/lix
+CLIENT_BIN  := $(BINDIR)/eidblot
 CLIENT_SRCS := $(wildcard src/*.cpp)
 CLIENT_OBJS := $(subst $(SRCDIR)/,$(OBJDIR)/,$(CLIENT_SRCS:%.cpp=%.o))
 CLIENT_DEPS := $(subst $(SRCDIR)/,$(DEPDIR)/,$(CLIENT_SRCS:%.cpp=%.d))
@@ -25,9 +25,12 @@ CLIENT_DEPS := $(subst $(SRCDIR)/,$(DEPDIR)/,$(CLIENT_SRCS:%.cpp=%.d))
 
 ###############################################################################
 
-.PHONY: all clean
+.PHONY: all run clean
 
-all: $(CLIENT_BIN) $(SERVER_BIN)
+all: $(CLIENT_BIN)
+	$(CLIENT_BIN) script.txt
+
+run: all
 
 clean:
 	$(RM) $(CLIENT_BIN)

@@ -4,61 +4,71 @@
  *
  */
 
+#include <iostream>
+
+#include "io.h"
 #include "blot.h"
 
-int main()
+int process(const std::vector <IO::Line>&);
+
+
+
+int main(int argc, char* argv[])
 {
     allegro_init();
     set_color_depth(32);
-
-    srand(time(0));
+    Blotter::initialize();
 
     std::cout << "This is eidblot." << std::endl;
 
-    pink = makecol(0xFF, 0, 0xFF);
-
-    if (argc != 3) {
-        std::cout << "Usage: " << argv[0] << " shapes.bmp texture.bmp"
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " rules1.txt [ rules2.txt ... ]"
                   << std::endl;
-        return -1;
+        return 0;
     }
 
-    BITMAP* shapebit = load_bitmap(argv[1], 0);
-    BITMAP* texture  = load_bitmap(argv[2], 0);
-    if (!texture || !shapebit) {
-        if (!texture ) std::cout << "Error loading ``" << argv[2] << "''.\n";
-        if (!shapebit) std::cout << "Error loading ``" << argv[1] << "''.\n";
-        std::cout << "Aborting." << std::endl;
-        if (texture)  destroy_bitmap(texture);
-        if (shapebit) destroy_bitmap(shapebit);
-        return -1;
+    int  scripts_processed = 0;
+    int  images_written    = 0;
+    bool error_occured     = false;
+
+    for (int i = 1; i < argc; ++i) {
+        const std::string filename = argv[i];
+        std::vector <IO::Line> lines;
+        if (! IO::fill_vector_from_file(lines, argv[i])) {
+            std::cout << "Error: ``" << filename << "'' isn't a commands file."
+            << std::endl;
+            error_occured = true;
+            break;
+        }
+        else if (lines.empty()) {
+            std::cout << "Error: ``" << filename << "'' has no commands."
+                << std::endl;
+            error_occured = true;
+            break;
+        }
+        else {
+            std::cout << "Processing ``" << filename << "''..." << std::endl;
+            int imgs = process(lines);
+            if (imgs >= 0) {
+                scripts_processed += 1;
+                images_written    += imgs;
+                std::cout << "Done with ``" << filename << "'', " << imgs
+                    << " images written." << std::endl;
+            }
+            else {
+                // process() has already printed the error.
+                error_occured = true;
+                break;
+            }
+        }
     }
-
-    std::list <BITMAP*> shapes;
-    std::cout << "Searching for shapes in ``"
-              << argv[1] << "'':" << std::endl;
-    cut_into_list(shapebit, shapes);
-    std::cout << "Found " << shapes.size() << " shapes."
-              << " Texturing them with ``" << argv[2] << "'':" << std::endl;
-
-    int outfile_count = 0;
-    for (std::list <BITMAP*> ::iterator itr = shapes.begin();
-     itr != shapes.end(); ++itr, ++outfile_count) {
-        apply_texture(*itr, texture);
-
-        std::ostringstream filename;
-        if (outfile_count < 100) filename << "0";
-        if (outfile_count <  10) filename << "0";
-        filename << outfile_count << ".pcx";
-        save_pcx(filename.str().c_str(), *itr, 0);
-
-        output_progress_dot(outfile_count);
-
-        destroy_bitmap(*itr);
-    }
-    std::cout << std::endl;
-
-    std::cout << "Done." << std::endl;
+    
+    if (error_occured) std::cout << "Aborting due to this error." << std::endl;
+    
+    if (images_written > 0) std::cout
+        << scripts_processed << "/" << argc - 1
+        << " command files successfully processed, "
+        << images_written    << " images written. " << std::endl;
     return 0;
 }
 END_OF_MAIN()

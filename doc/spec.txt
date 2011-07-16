@@ -23,8 +23,9 @@ A shape that is larger than the texture isn't processed.
 
 New workings after reading the control file:
 
-Blank lines and lines starting with `#' are ignored. Lines starting with
-`\' are commands that may take arguments in the same line.
+Blank lines and lines starting with anything other than `#', `>' or `$'
+are ignored. Lines starting with the listed characters are commands that may
+take arguments in the same line.
 
 The program can work in single image mode or in shape sheet mode.
 
@@ -52,7 +53,7 @@ Output images will always be PCX.
     mode. It's only necessary to use this command when there has been a
     ``\shapesheet'' command before.
 
-\shapesheet somefilename.bmppcxtga
+$shapesheet somefilename.bmppcxtga
 
     Enters shape sheet mode. If there was a shapesheet specified before,
     it's now obsolete, and the new shapesheet will be somefilename.bmppcxtga.
@@ -72,7 +73,7 @@ Output images will always be PCX.
     been used, the job won't be executed, but skipped. An error message is
     written to the screen.
 
-\thickness t
+#thickness t
 
     Sets the thickness to t, which must be a nonnegative integer. This is
     the distance which pixels may be away from the edges of an image to
@@ -80,7 +81,7 @@ Output images will always be PCX.
 
     By default, thickness is 4.
 
-\dampening d
+#dampening d
 
     Sets the dampening to d, which must be a nonnegative integer.
 
@@ -94,7 +95,7 @@ Output images will always be PCX.
 
     By defalut, dampening is 1.
 
-\strength s
+#strength s
 
     Sets the strength to s, which must be a nonnegative integer.
 

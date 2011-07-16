@@ -1,45 +1,104 @@
-#include <allegro.h>
-#include <iostream>
-#include <set>
-#include <list>
 #include <vector>
-#include <sstream>
 
-
-namespace Blot {
-
-int pink = 0; // global
-
-typedef std::pair <int, int> XY;
-
-struct Area {
-    BITMAP* ground;
-    std::set <XY> xy;
-    int x_min;
-    int x_max;
-    int y_min;
-    int y_max;
-
-    Area(BITMAP* g) :
-     ground(g), x_min(ground->w - 1), x_max(0), y_min(ground->h - 1), y_max(0)
-     {}
-};
+#include "blot.h"
 
 
 
-void output_progress_dot(const int n)
+int Blotter::pink(0);
+
+
+
+void Blotter::initialize()
 {
-    // make 8 sqaures of 25 dots, then an empty line
-    if      (n == 0) ; // don't print any separator, just the dot later
-    else if (n % 200 == 0) std::cout << "\n\n";
-    else if (n %  40 == 0) std::cout << "\n";
-    else if (n %   5 == 0) std::cout << " ";
-    std::cout << "." << std::flush;
+    pink = makecol(0xFF, 0, 0xFF);
+    srand(time(0));
 }
 
 
 
-void cut_into_list(BITMAP* shapebit, std::list <BITMAP*>& list)
+Blotter::Blotter()
+:
+    thickness(4),
+    dampening(1),
+    strength (255),
+    texture  (0)
+{
+}
+
+
+
+Blotter::~Blotter()
+{
+    if (texture) ::destroy_bitmap(texture);
+    destroy_all_shapes();
+}
+
+
+
+void Blotter::destroy_all_shapes()
+{
+    for (Bitlist::iterator itr = shapes.begin(); itr != shapes.end(); ++itr)
+        if (*itr != 0)
+            ::destroy_bitmap(*itr);
+    shapes.clear();
+}
+
+
+
+void Blotter::set_thickness(int i) { if (i >= 0) thickness = i; }
+void Blotter::set_dampening(int i) { if (i >= 0) dampening = i; }
+void Blotter::set_strength (int i) { if (i >= 0) strength  = i; }
+
+
+
+bool Blotter::load_texture(const std::string& s)
+{
+    texture = ::load_bitmap(s.c_str(), 0);
+    return texture != 0;
+}
+
+
+
+BITMAP* Blotter::get_texture()
+{
+    return texture;
+}
+    
+    
+
+bool Blotter::load_shapes(const std::string& s)
+{
+    destroy_all_shapes();
+    
+    BITMAP* sheet = load_bitmap(s.c_str(), 0);
+    if (!sheet) return false;
+    else {
+        bool ok = cut_into_list(sheet);
+        ::destroy_bitmap(sheet);
+        return ok;
+    }
+}
+
+
+
+int Blotter::get_shapes_remaining()
+{
+    return shapes.size();
+}
+
+
+
+BITMAP* Blotter::pop_shape_caller_should_destroy_it_later()
+{
+    if (shapes.empty()) return 0;
+    BITMAP* first = *shapes.begin();
+    shapes.erase(shapes.begin());
+    return first;
+}
+    
+    
+
+bool Blotter::cut_into_list(BITMAP* shapebit)
 {
     for  (int y = 0; y < shapebit->h; ++y)
      for (int x = 0; x < shapebit->w; ++x) {
@@ -50,45 +109,45 @@ void cut_into_list(BITMAP* shapebit, std::list <BITMAP*>& list)
             BITMAP* piece = create_bitmap(area.x_max - area.x_min + 1,
                                           area.y_max - area.y_min + 1);
             if (!piece || piece->w <= 0 || piece->h <= 0) {
-                std::cout << "Error making a piece, continuing." << std::endl;
                 if (piece) destroy_bitmap(piece);
-                continue;
+                return false;
             }
             clear_to_color(piece, pink);
-            for (std::set <XY> ::const_iterator
-             itr = area.xy.begin(); itr != area.xy.end(); ++itr) {
-                putpixel(piece,
-                         itr->first - area.x_min, itr->second - area.y_min,
-                         getpixel(area.ground, itr->first, itr->second));
+            for (std::set <Xy> ::const_iterator
+             itr = area.Xy.begin(); itr != area.Xy.end(); ++itr) {
+                _putpixel32(piece,
+                    itr->first - area.x_min, itr->second - area.y_min,
+                    _getpixel32(area.ground, itr->first, itr->second));
             }
-            list.push_back(piece);
+            shapes.push_back(piece);
             fill_area_with_color(area, pink);
-
-            output_progress_dot(list.size() - 1);
         }
     }
-    std::cout << std::endl;
+    return true;
 }
 
 
 
-void find_connected_area(Area& area, const int x, const int y)
-{
-    std::list <XY> open; // Pixels that still have to be examined.
-    open.push_back(XY(x, y));
+void Blotter::find_connected_area(
+    Blotter::Area& area,
+    const int x,
+    const int y
+) {
+    std::list <Xy> open; // Pixels that still have to be examined.
+    open.push_back(Xy(x, y));
 
     const int xl = area.ground->w;
     const int yl = area.ground->h;
 
     while (!open.empty()) {
-        XY cur = *open.begin();
+        Xy cur = *open.begin();
         open.erase(open.begin());
 
         if (getpixel(area.ground, cur.first, cur.second) != pink) {
-            std::set <XY> ::const_iterator found = area.xy.find(cur);
-            // If cur is not in the set area.xy
-            if (found == area.xy.end()) {
-                area.xy.insert(cur);
+            std::set <Xy> ::const_iterator found = area.Xy.find(cur);
+            // If cur is not in the set area.Xy
+            if (found == area.Xy.end()) {
+                area.Xy.insert(cur);
                 if (area.x_min > cur.first)  area.x_min = cur.first;
                 if (area.x_max < cur.first)  area.x_max = cur.first;
                 if (area.y_min > cur.second) area.y_min = cur.second;
@@ -97,14 +156,14 @@ void find_connected_area(Area& area, const int x, const int y)
                 const bool d = cur.first  < xl - 1;
                 const bool l = cur.second > 0;
                 const bool r = cur.second < yl - 1;
-                if (u     ) open.push_back(XY(cur.first-1, cur.second  ));
-                if (u && r) open.push_back(XY(cur.first-1, cur.second+1));
-                if (     r) open.push_back(XY(cur.first,   cur.second+1));
-                if (d && r) open.push_back(XY(cur.first+1, cur.second+1));
-                if (d     ) open.push_back(XY(cur.first+1, cur.second  ));
-                if (d && l) open.push_back(XY(cur.first+1, cur.second-1));
-                if (     l) open.push_back(XY(cur.first,   cur.second-1));
-                if (u && l) open.push_back(XY(cur.first-1, cur.second-1));
+                if (u     ) open.push_back(Xy(cur.first-1, cur.second  ));
+                if (u && r) open.push_back(Xy(cur.first-1, cur.second+1));
+                if (     r) open.push_back(Xy(cur.first,   cur.second+1));
+                if (d && r) open.push_back(Xy(cur.first+1, cur.second+1));
+                if (d     ) open.push_back(Xy(cur.first+1, cur.second  ));
+                if (d && l) open.push_back(Xy(cur.first+1, cur.second-1));
+                if (     l) open.push_back(Xy(cur.first,   cur.second-1));
+                if (u && l) open.push_back(Xy(cur.first-1, cur.second-1));
             }
         }
         // Done checking a pixel.
@@ -114,10 +173,10 @@ void find_connected_area(Area& area, const int x, const int y)
 
 
 
-void fill_area_with_color(const Area& area, const int color)
+void Blotter::fill_area_with_color(const Blotter::Area& area, const int color)
 {
-    for (std::set <XY> ::const_iterator
-     itr = area.xy.begin(); itr != area.xy.end(); ++itr) {
+    for (std::set <Xy> ::const_iterator
+     itr = area.Xy.begin(); itr != area.Xy.end(); ++itr) {
         putpixel(area.ground, itr->first, itr->second, color);
     }
 }
@@ -128,7 +187,7 @@ void fill_area_with_color(const Area& area, const int color)
 inline bool is_pink(BITMAP* b, const int x, const int y)
 {
     if (x < 0 || y < 0 || x >= b->w || y >= b->h) return true;
-    else return _getpixel32(b, x, y) == pink;
+    else return _getpixel32(b, x, y) == Blotter::pink;
 }
 
 inline int recolor_base_color(
@@ -142,12 +201,10 @@ inline int recolor_base_color(
 
 
 
-void apply_texture(BITMAP* piece, BITMAP* texture)
+bool Blotter::process_shape(BITMAP* piece)
 {
     if (piece->w > texture->w || piece->h > texture->h) {
-        std::cout << "Texture too small for piece. Check your output later."
-         << std::endl;
-        return;
+        return false;
     }
     // The following vector should be viewed as functions from the set of
     // piece coordinates to ints. The value of the coordinate (x, y) is
@@ -162,19 +219,19 @@ void apply_texture(BITMAP* piece, BITMAP* texture)
 
     // The maximum distance from a pink pixel to still have an effect on this
     // recoloring is stored in the following variable.
-    const int thickness = 4;
+    // thickness;
 
     // The greater this value is in comparison to thickness, the less the
     // edges will be colored towards white/dark. See int recolor_base_color()
     // above for details. This value must be greater than thickness in order
     // to hand int makecol32() values between 0 and 255 inclusive!
     // Don't set it to 0 in case thickness is 0, or the code will divide by 0.
-    const int extra_thickness = thickness + 2;
+    const int extra_thickness = thickness + dampening;
 
     // Finding the outsides.
     for  (int y = 0; y < piece->h; ++y)
      for (int x = 0; x < piece->w; ++x) {
-        const int exy = piece->w * y + x;
+        const int eXy = piece->w * y + x;
         if (getpixel(piece, x, y) == pink) continue;
         else {
             bool lighter = is_pink(piece, x-1, y  )
@@ -183,8 +240,8 @@ void apply_texture(BITMAP* piece, BITMAP* texture)
             bool darker  = is_pink(piece, x+1, y  )
                         || is_pink(piece, x  , y+1)
                         || is_pink(piece, x+1, y+1);
-            if (lighter && !darker) edge[exy] = thickness;
-            if (!lighter && darker) edge[exy] = -thickness;
+            if (lighter && !darker) edge[eXy] = thickness;
+            if (!lighter && darker) edge[eXy] = -thickness;
         }
     }
 
@@ -192,19 +249,19 @@ void apply_texture(BITMAP* piece, BITMAP* texture)
     for (int step = thickness - 1; step > 0; --step) {
         for  (int y = 1; y < piece->h - 1; ++y)
          for (int x = 1; x < piece->w - 1; ++x) {
-            const int exy = piece->w * y + x;
-            if (edge[exy] != 0 || is_pink(piece, x, y)) continue;
+            const int eXy = piece->w * y + x;
+            if (edge[eXy] != 0 || is_pink(piece, x, y)) continue;
             else {
                 // We're in the proper inside. +-1 is always valid
                 // in each direction and yields an existing pixel again.
-                bool lighter = edge[exy - 1]            == step + 1
-                            || edge[exy - piece->w]     == step + 1
-                            || edge[exy - piece->w - 1] == step + 1;
-                bool darker  = edge[exy + 1]            == -step - 1
-                            || edge[exy + piece->w]     == -step - 1
-                            || edge[exy + piece->w + 1] == -step - 1;
-                if (lighter && !darker) edge[exy] = step;
-                if (!lighter && darker) edge[exy] = -step;
+                bool lighter = edge[eXy - 1]            == step + 1
+                            || edge[eXy - piece->w]     == step + 1
+                            || edge[eXy - piece->w - 1] == step + 1;
+                bool darker  = edge[eXy + 1]            == -step - 1
+                            || edge[eXy + piece->w]     == -step - 1
+                            || edge[eXy + piece->w + 1] == -step - 1;
+                if (lighter && !darker) edge[eXy] = step;
+                if (!lighter && darker) edge[eXy] = -step;
             }
         }
     }
@@ -224,17 +281,16 @@ void apply_texture(BITMAP* piece, BITMAP* texture)
     // Recolor the piece
     for  (int y = 0; y < piece->h; ++y)
      for (int x = 0; x < piece->w; ++x) {
-        const int exy = piece->w * y + x;
+        const int eXy = piece->w * y + x;
         const int p = _getpixel32(piece, x, y);
         if (p == pink) continue;
-        else if (edge[exy] == 0) continue;
+        else if (edge[eXy] == 0) continue;
         else {
             _putpixel32(piece, x, y, makecol32(
-             recolor_base_color(getr32(p), edge[exy], extra_thickness),
-             recolor_base_color(getg32(p), edge[exy], extra_thickness),
-             recolor_base_color(getb32(p), edge[exy], extra_thickness)));
+             recolor_base_color(getr32(p), edge[eXy], extra_thickness),
+             recolor_base_color(getg32(p), edge[eXy], extra_thickness),
+             recolor_base_color(getb32(p), edge[eXy], extra_thickness)));
         }
     }
+    return true;
 }
-
-} // end of namespace

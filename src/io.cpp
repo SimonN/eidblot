@@ -26,6 +26,10 @@ Line::Line(const std::string& src)
     bool minus3 = false;
 
     switch (type) {
+    case '>':
+        while (i != src.end() && *i == ' ') ++i;
+        while (i != src.end()             ) text1 += *i++;
+        
     case '$':
         while (i != src.end() && *i != ' ') text1 += *i++;
         while (i != src.end() && *i == ' ') ++i;
@@ -37,52 +41,6 @@ Line::Line(const std::string& src)
         while (i != src.end() && *i == ' ') ++i;
         while (i != src.end() && *i != ' ') iter_to_long(i, nr1, minus1);
         break;
-
-    case ':':
-        while (i != src.end() && *i != ':') text1 += *i++;
-        while (i != src.end() && *i == ':') ++i;
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr1, minus1);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr2, minus2);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end()             ) text2 += *i++;
-        break;
-
-    case '+':
-        while (i != src.end() && *i != ' ') text1 += *i++;
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr1, minus1);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') text2 += *i++;
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end()             ) text3 += *i++;
-        break;
-
-    case '!':
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr1, minus1);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr2, minus2);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') text1 += *i++;
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr3, minus3);
-        break;
-
-    case '<':
-        while (i != src.end() && *i != '>') text1 += *i++;
-        while (i != src.end() && *i == '>') ++i;
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr1, minus1);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr2, minus2);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end() && *i != ' ') iter_to_long(i, nr3, minus3);
-        while (i != src.end() && *i == ' ') ++i;
-        while (i != src.end()             ) text2 += *i++;
-        break;
-
 
     default:
         // Zeile als ungueltig markieren
@@ -110,6 +68,11 @@ void Line::iter_to_long(std::string::const_iterator& i, long& nr, bool& minus)
 // Funtionen, die Zeilen zum Schreiben erzeugen und auf den privaten
 // Konstruktor (siehe weiter unten) zurueckgreifen
 typedef const std::string& Str;
+
+Line LineSimple(const Str t1)
+{
+    return Line('>', t1, "", "",  0,  0,  0);
+}
 
 Line LineHash  (const Str t1, const long n1)
 {
@@ -195,50 +158,15 @@ std::ostream& operator << (std::ostream& original_stream, const Line& ld)
     o << ld.type;
 
     switch (ld.type) {
+    case '>':
+        o << ld.text1;
+    
     case '$':
-        o << ld.text1; pad(o, 70 - ld.text2.size());
-        o << ld.text2;
+        o << ld.text1 << " " << ld.text2;
         break;
 
     case '#':
-        o << ld.text1; pad(o, 70 - digits(ld.nr1));
-        o << ld.nr1;
-        break;
-
-    case ':':
-        o << ld.text1;
-        o << ':';      pad(o, 60 - digits(ld.nr1));
-        o << ld.nr1;   pad(o, 70 - digits(ld.nr2));
-        o << ld.nr2;
-        if (!ld.text2.empty()) {
-            pad(o, 75);
-            o << ld.text2;
-        }
-        break;
-
-    case '+':
-        o << ld.text1; pad(o, 20 - digits(ld.nr2));
-        o << ld.nr1;
-        o << ' ';
-        o << ld.text2; pad(o, 70 - ld.text3.size());
-        o << ld.text3;
-        break;
-
-    case '!':          pad(o, 10 - digits(ld.nr1));
-        o << ld.nr1;   pad(o, 20 - digits(ld.nr2));
-        o << ld.nr2;
-        o << ' ';
-        o << ld.text1; pad(o, 70 - digits(ld.nr3));
-        o << ld.nr3;
-        break;
-
-    case '<':
-        o << ld.text1;
-        o << '>';      pad(o, 60 - digits(ld.nr1));
-        o << ld.nr1;   pad(o, 65 - digits(ld.nr2));
-        o << ld.nr2;   pad(o, 72 - digits(ld.nr3));
-        o << ld.nr3;   pad(o, 95 - ld.text2.size());
-        o << ld.text2;
+        o << ld.text1 << " " << ld.nr1;
         break;
 
     default:
@@ -278,7 +206,8 @@ bool fill_vector_from_stream(std::vector <Line>& v, std::istream& in)
             else break;
         }
         // String uebergeben und naechste Zeile einlesen
-        v.push_back(Line(s));
+        Line line(s);
+        if (line.type != '\0') v.push_back(Line(s));
     }
     return true;
 }
