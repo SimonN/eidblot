@@ -4,6 +4,7 @@ namespace Blot {
 
     typedef std::pair <int, int> XY;
     struct Area;
+
     int pink;
 
     void cut_into_list       (BITMAP*, std::list <BITMAP*>&);
