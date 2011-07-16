@@ -1,0 +1,15 @@
+\outdir ./out/
+\texture ./pics/texture.bmp
+
+\thickness 4
+\dampening 2
+
+\shapes ./pics/someshapes.bmp
+
+008s
+008a
+008b
+008c
+008d
+
+016s

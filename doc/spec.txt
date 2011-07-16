@@ -1,0 +1,108 @@
+
+
+eidblot takes a shape templates file and a texture file, and writes several
+images as output.
+
+Usage: eidblot shape.bmp texture.bmp
+
+Output: Files 0000.bmp, 0001.bmp, ..., the number of these output files
+depends on the number of shapes in shape.bmp.
+
+SHAPE TEMPLATES
+---------------
+go through this file like eidcut. Don't write the shapes to disk.
+Don't alter the input shape templates file.
+
+PROCESS
+-------
+A shape that is larger than the texture isn't processed.
+
+-------------------------
+=========================
+-------------------------
+
+New workings after reading the control file:
+
+Blank lines and lines starting with `#' are ignored. Lines starting with
+`\' are commands that may take arguments in the same line.
+
+The program can work in single image mode or in shape sheet mode.
+
+Non-comment, non-command lines are treated as a single job to be processed.
+A job yields as a result a single image written to disk, or maybe an error
+message to the console. Thus, in single image mode, a job is processing such
+a single image, and in shape sheet mode, a job is making an image for one
+of the shapes. For details on how jobs are being processed, read the info
+for the commands ``\single'' and ``\shapesheet''.
+
+Images have to be BMP, PCX or TGA to be able to be read by this program.
+Output images will always be PCX.
+
+\single
+
+    Enters single image mode.
+
+    All following non-comment, non-command lines are treated as image
+    input filenames. The image at such a filename will be loaded, processed,
+    and then written to disk. The filename for writing is different from
+    the loading filename, it starts like it, but has a `-' appended at the
+    end.
+
+    At the top of the control file, the program is already in single image
+    mode. It's only necessary to use this command when there has been a
+    ``\shapesheet'' command before.
+
+\shapesheet somefilename.bmppcxtga
+
+    Enters shape sheet mode. If there was a shapesheet specified before,
+    it's now obsolete, and the new shapesheet will be somefilename.bmppcxtga.
+    This new shapesheet will start to yield shapes from the beginning,
+    no matter if or how far an old shapesheet was processed.
+
+    All following non-comment, non-command lines are treated as image
+    output filenames. Each of them is called a job line here. A shape from
+    the shapesheet is used to make an image which is then saved to that
+    filename plus ``.pcx'' appended to its end.
+
+    After processing a single job, an internal counter is incremented so
+    that the same shape isn't used twice. The next job line uses the next
+    image.
+
+    If there is another job line after all shapes from the shapesheet have
+    been used, the job won't be executed, but skipped. An error message is
+    written to the screen.
+
+\thickness t
+
+    Sets the thickness to t, which must be a nonnegative integer. This is
+    the distance which pixels may be away from the edges of an image to
+    still be lighted/darkened.
+
+    By default, thickness is 4.
+
+\dampening d
+
+    Sets the dampening to d, which must be a nonnegative integer.
+
+    Let t be the thickness and d the above dampening argument. Edge pixels
+    will be recolored t steps in such a way that they'd reach at least 255
+    or at most 0 in any of the primary colors if they were recolored t+d
+    steps.
+
+    Pixels that aren't directly at the edge but get recolered nonetheless
+    get linearly less strong recoloring than the edge pixels.
+
+    By defalut, dampening is 1.
+
+\strength s
+
+    Sets the strength to s, which must be a nonnegative integer.
+
+    This is the amount that a single primary color will be raised or lowered
+    for. If the thickness and the dampening (see commands above) yield
+    recolorings by more than s in a single primary color, the step-wise
+    recoloring gets scaled down so that no primary color change exceeds s.
+    The downscaling is done with the same factor in all three primary colors.
+    
+    This consideration is done per pixel, so other pixels may get downscalings
+    of their recolorings by a different factor.

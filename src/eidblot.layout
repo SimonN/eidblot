@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="blot.cpp" open="0" top="0" tabpos="2">
+		<Cursor position="1010" topLine="40" />
+	</File>
+	<File name="blot.h" open="0" top="0" tabpos="3">
+		<Cursor position="31" topLine="0" />
+	</File>
+	<File name="io.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="18" topLine="0" />
+	</File>
+	<File name="io.h" open="0" top="0" tabpos="5">
+		<Cursor position="925" topLine="0" />
+	</File>
+	<File name="main.cpp" open="0" top="0" tabpos="1">
+		<Cursor position="143" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>
