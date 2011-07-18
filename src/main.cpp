@@ -47,7 +47,8 @@ int main(int argc, char* argv[])
             break;
         }
         else {
-            std::cout << "Processing ``" << filename << "''..." << std::endl;
+            std::cout << "Processing commands file ``"
+                << filename << "''." << std::endl;
             int imgs = process(lines);
             if (imgs >= 0) {
                 scripts_processed += 1;
@@ -62,13 +63,13 @@ int main(int argc, char* argv[])
             }
         }
     }
-    
-    if (error_occured) std::cout << "Aborting due to this error." << std::endl;
-    
-    if (images_written > 0) std::cout
+        
+    std::cout
         << scripts_processed << "/" << argc - 1
-        << " command files successfully processed, "
-        << images_written    << " images written. " << std::endl;
+        << " command files successfully processed, ";
+    if (error_occured) std::cout << "aborted due to error." << std::endl;
+    else std::cout << images_written << " images written. " << std::endl;
+
     return 0;
 }
 END_OF_MAIN()

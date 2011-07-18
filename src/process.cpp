@@ -13,7 +13,8 @@ int process(const std::vector <IO::Line>& iolines)
 {
     Blotter b;
     
-    std::string out;
+    std::string prefix = "";
+    std::string suffix = ".pcx";
     
     // these are just to give a better error message to help newb users
     bool newb_shapes_loaded  = false;
@@ -52,11 +53,8 @@ int process(const std::vector <IO::Line>& iolines)
         }
         
         else if (l.type == '$') {
-            if (l.text1 == "out") {
-                out = l.text2;
-                // no need to print anything, it'll be prepended to any
-                // printed filename later anyway.
-            }            
+            if      (l.text1 == "prefix") prefix = l.text2; 
+            else if (l.text1 == "suffix") suffix = l.text2;
             else if (l.text1 == "texture") {
                 if (b.load_texture(l.text2)) {
                     newb_texture_loaded = true;
@@ -84,8 +82,9 @@ int process(const std::vector <IO::Line>& iolines)
                 }
             }
             else {
-                std::cout << "Ignoring unknown command ``$" << l.text1
-                    << "''." << std::endl;
+                std::cout << "Error: ``$" << l.text1
+                    << "'' is an unknown command." << std::endl;
+                return -1;
             }
         }
         
@@ -121,7 +120,7 @@ int process(const std::vector <IO::Line>& iolines)
                     return -1;
                 }
                 else {
-                    std::string outfile = out + l.text2;
+                    std::string outfile = prefix + l.text1 + suffix;
                     save_pcx(outfile.c_str(), shape, 0);
                     ++images_written;
                     std::cout << "Written ``" << outfile << "'', "
