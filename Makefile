@@ -28,9 +28,9 @@ CLIENT_DEPS := $(subst $(SRCDIR)/,$(DEPDIR)/,$(CLIENT_SRCS:%.cpp=%.d))
 .PHONY: all run clean
 
 all: $(CLIENT_BIN)
-	$(CLIENT_BIN) script.txt
 
 run: all
+	$(CLIENT_BIN) script.txt
 
 clean:
 	$(RM) $(CLIENT_BIN)
@@ -38,7 +38,7 @@ clean:
 
 $(CLIENT_BIN): $(CLIENT_OBJS)
 	@$(MKDIR) $(BINDIR)
-	@echo Linking the game binary \`$(CLIENT_BIN)\'.
+	@echo Linking \`$(CLIENT_BIN)\'.
 	@echo Linker flags: $(LDDIRS) $(LDALLEG) $(LDENET)
 	@$(LD) $(LDDIRS) $(LDALLEG) $(LDENET) $(CLIENT_OBJS) -o $(CLIENT_BIN)
 

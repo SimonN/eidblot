@@ -228,11 +228,25 @@ bool Blotter::process_shape(BITMAP* piece)
     // Don't set it to 0 in case thickness is 0, or the code will divide by 0.
     const int extra_thickness = thickness + dampening;
 
+    // Find extreme outside points which would get colored badly otherwise
+    for  (int y = 0; y < piece->h; ++y)
+     for (int x = 0; x < piece->w; ++x) {
+        const int eXy = piece->w * y + x;
+        if (getpixel(piece, x, y) == pink) continue;
+        else {
+            bool lighter = is_pink(piece, x-1, y-1);
+            bool darker  = is_pink(piece, x+1, y+1);
+            if (lighter && !darker) edge[eXy] = thickness;
+            if (!lighter && darker) edge[eXy] = -thickness;
+        }
+    }
+
     // Finding the outsides.
     for  (int y = 0; y < piece->h; ++y)
      for (int x = 0; x < piece->w; ++x) {
         const int eXy = piece->w * y + x;
         if (getpixel(piece, x, y) == pink) continue;
+        if (edge[eXy] != 0)                continue;
         else {
             bool lighter = is_pink(piece, x-1, y  )
                         || is_pink(piece, x  , y-1)
@@ -245,7 +259,26 @@ bool Blotter::process_shape(BITMAP* piece)
         }
     }
 
-    // Finding more. It's enough to just handle the proper inside.
+    // Finding outside pixels that weren't colored yet,
+    // e.g. on tau/8-slopes
+    for  (int y = 0; y < piece->h; ++y)
+     for (int x = 0; x < piece->w; ++x) {
+        const int eXy = piece->w * y + x;
+        if (getpixel(piece, x, y) == pink) continue;
+        if (edge[eXy] != 0)                continue;
+        else {
+            bool lighter = is_pink(piece, x,   y-1)
+                      && ! is_pink(piece, x-1, y-1)
+                      && ! is_pink(piece, x+1, y+1);
+            bool darker  = is_pink(piece, x,   y+1)
+                      && ! is_pink(piece, x-1, y-1)
+                      && ! is_pink(piece, x+1, y+1);
+            if (lighter && !darker) edge[eXy] =   (thickness / 2);
+            if (!lighter && darker) edge[eXy] = - (thickness / 2);
+        }
+    }
+
+    // Finding inside pixels. It's enough to just handle the proper inside.
     for (int step = thickness - 1; step > 0; --step) {
         for  (int y = 1; y < piece->h - 1; ++y)
          for (int x = 1; x < piece->w - 1; ++x) {
