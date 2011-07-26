@@ -33,17 +33,35 @@ int process(const std::vector <IO::Line>& iolines)
                     << "'' has a negative argument." << std::endl;
                 return -1;
             }
-            else if (l.text1 == "thickness") {
-                b.set_thickness(l.nr1);
-                std::cout << "Thickness set to " << l.nr1 << "." << std::endl;
+            else if (l.text1 == "bevel-thickness") {
+                b.set_bevel_thickness(l.nr1);
+                std::cout << "Bevel Thickness set to "
+                    << l.nr1 << "." << std::endl;
             }
-            else if (l.text1 == "dampening") {
-                b.set_dampening(l.nr1);
-                std::cout << "Dampening set to " << l.nr1 << "." << std::endl;
+            else if (l.text1 == "bevel-dampening") {
+                b.set_bevel_dampening(l.nr1);
+                std::cout << "Bevel Dampening set to "
+                    << l.nr1 << "." << std::endl;
             }
-            else if (l.text1 == "strength") {
-                b.set_strength(l.nr1);
-                std::cout << "Strength set to " << l.nr1 << "." << std::endl;
+            else if (l.text1 == "bevel-strength") {
+                b.set_bevel_strength(l.nr1);
+                std::cout << "Bevel Strength set to "
+                    << l.nr1 << "." << std::endl;
+            }
+            else if (l.text1 == "pillar-dampening") {
+                b.set_pillar_dampening(l.nr1);
+                std::cout << "Pillar Dampening set to "
+                    << l.nr1 << "." << std::endl;
+            }
+            else if (l.text1 == "pillar-dampening") {
+                b.set_pillar_dampening(l.nr1);
+                std::cout << "Pillar Dampening set to "
+                    << l.nr1 << "." << std::endl;
+            }
+            else if (l.text1 == "pillar-strength") {
+                b.set_pillar_strength(l.nr1);
+                std::cout << "Pillar Strength set to "
+                    << l.nr1 << "." << std::endl;
             }
             else {
                 std::cout << "Error: ``#" << l.text1
@@ -55,6 +73,26 @@ int process(const std::vector <IO::Line>& iolines)
         else if (l.type == '$') {
             if      (l.text1 == "prefix") prefix = l.text2; 
             else if (l.text1 == "suffix") suffix = l.text2;
+            else if (l.text1 == "mode") {
+                if (l.text2 == "bevel") {
+                    b.set_main_mode(Blotter::BEVEL);
+                    std::cout << "Bevel mode selected." << std::endl;
+                }
+                else if (l.text2 == "pillar-horizontal") {
+                    b.set_main_mode(Blotter::PILLAR_HORZ);
+                    std::cout << "Pillar-Horizontal mode selected."
+                        << std::endl;
+                }
+                else if (l.text2 == "pillar-vertical") {
+                    b.set_main_mode(Blotter::PILLAR_VERT);
+                    std::cout << "Pillar-Vertical mode selected." << std::endl;
+                }
+                else {
+                    std::cout << "Error: ``" << l.text2
+                        << "'' is an unknown mode." << std::endl;
+                    return -1;                    
+                }
+            }
             else if (l.text1 == "texture") {
                 if (b.load_texture(l.text2)) {
                     newb_texture_loaded = true;
@@ -123,7 +161,7 @@ int process(const std::vector <IO::Line>& iolines)
                     std::string outfile = prefix + l.text1 + suffix;
                     save_pcx(outfile.c_str(), shape, 0);
                     ++images_written;
-                    std::cout << "Written ``" << outfile << "'', "
+                    std::cout << "  > ``" << outfile << "'', "
                         << shape->w << " x " << shape->h << "." << std::endl;
                     ::destroy_bitmap(shape);
                 }
@@ -134,45 +172,3 @@ int process(const std::vector <IO::Line>& iolines)
     }
     return images_written;
 }
-
-
-
-/*
-    BITMAP* shapebit = load_bitmap(argv[1], 0);
-    BITMAP* texture  = load_bitmap(argv[2], 0);
-    if (!texture || !shapebit) {
-        if (!texture ) std::cout << "Error loading ``" << argv[2] << "''.\n";
-        if (!shapebit) std::cout << "Error loading ``" << argv[1] << "''.\n";
-        std::cout << "Aborting." << std::endl;
-        if (texture)  destroy_bitmap(texture);
-        if (shapebit) destroy_bitmap(shapebit);
-        return -1;
-    }
-
-    std::list <BITMAP*> shapes;
-    std::cout << "Searching for shapes in ``"
-              << argv[1] << "'':" << std::endl;
-    cut_into_list(shapebit, shapes);
-    std::cout << "Found " << shapes.size() << " shapes."
-              << " Texturing them with ``" << argv[2] << "'':" << std::endl;
-
-    int outfile_count = 0;
-    for (std::list <BITMAP*> ::iterator itr = shapes.begin();
-     itr != shapes.end(); ++itr, ++outfile_count) {
-        apply_texture(*itr, texture);
-
-        std::ostringstream filename;
-        if (outfile_count < 100) filename << "0";
-        if (outfile_count <  10) filename << "0";
-        filename << outfile_count << ".pcx";
-        save_pcx(filename.str().c_str(), *itr, 0);
-
-        output_progress_dot(outfile_count);
-
-        destroy_bitmap(*itr);
-    }
-    std::cout << std::endl;
-
-    std::cout << "Done." << std::endl;
-    return 0;
-    */

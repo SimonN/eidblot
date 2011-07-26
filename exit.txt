@@ -1,0 +1,7 @@
+#thickness 2
+#dampening 2
+
+$texture ./pics/tapir3.bmp
+$shapes  ./pics/exitshape.bmp
+
+> ./out/exit

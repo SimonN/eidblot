@@ -9,6 +9,12 @@ class Blotter {
 
 public:
 
+    enum MainMode {
+        BEVEL,
+        PILLAR_HORZ,
+        PILLAR_VERT
+    };
+
     static void initialize();
     
     static int pink;
@@ -16,9 +22,14 @@ public:
     Blotter();
     ~Blotter();
 
-    void set_thickness(int);
-    void set_dampening(int);
-    void set_strength (int);
+    void set_main_mode(MainMode);
+
+    void set_bevel_thickness(int);
+    void set_bevel_dampening(int);
+    void set_bevel_strength (int);
+    
+    void set_pillar_dampening(int);
+    void set_pillar_strength (int);
     
     bool    load_texture(const std::string&); // returns false on error
     BITMAP* get_texture ();                   // returns 0 on error
@@ -48,11 +59,14 @@ private:
             y_min(ground->h - 1), y_max(0) { }
     };
 
-
+    MainMode main_mode;
     
-    int thickness;
-    int dampening;
-    int strength;
+    int bevel_thickness;
+    int bevel_dampening;
+    int bevel_strength;
+    
+    int pillar_dampening;
+    int pillar_strength;
     
     BITMAP* texture;
     Bitlist shapes;
@@ -61,5 +75,19 @@ private:
     bool cut_into_list       (BITMAP*); // returns false on error
     void find_connected_area (      Area&, const int,   const int);
     void fill_area_with_color(const Area&, const int);
+
+    bool process_shape_bevel (BITMAP*);
+    bool process_shape_pillar(BITMAP*);
+
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Inline function
+    inline bool is_pink(BITMAP* b, const int x, const int y)
+    {
+        if (x < 0 || y < 0 || x >= b->w || y >= b->h) return true;
+        else return _getpixel32(b, x, y) == Blotter::pink;
+    }
 
 };

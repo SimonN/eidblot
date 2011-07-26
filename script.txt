@@ -1,5 +1,10 @@
-#thickness 4
-#dampening 2
+#bevel-thickness 4
+#bevel-dampening 2
+#bevel-strength  16
+
+$mode pillar-horizontal
+$mode pillar-vertical
+$mode bevel
 
 $texture ./pics/tapir3.bmp
 $shapes  ./pics/shapes.bmp
