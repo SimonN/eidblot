@@ -65,7 +65,7 @@ private:
     int bevel_dampening;
     int bevel_strength;
     
-    int pillar_dampening;
+    int pillar_dampening_of_120;
     int pillar_strength;
     
     BITMAP* texture;

@@ -24,8 +24,8 @@ Blotter::Blotter()
     bevel_dampening(1),
     bevel_strength (0),
     
-    pillar_dampening(30),
-    pillar_strength (0),
+    pillar_dampening_of_120(30),
+    pillar_strength       (0),
     
     texture  (0)
 {
@@ -57,7 +57,11 @@ void Blotter::set_bevel_thickness(int i) { if (i >= 0) bevel_thickness = i; }
 void Blotter::set_bevel_dampening(int i) { if (i >= 0) bevel_dampening = i; }
 void Blotter::set_bevel_strength (int i) { if (i >= 0) bevel_strength  = i; }
 
-void Blotter::set_pillar_dampening(int i) { if (i >= 0) pillar_dampening = i; }
+void Blotter::set_pillar_dampening(int i)
+{
+    if (i >= 0) pillar_dampening_of_120 = i;
+}
+
 void Blotter::set_pillar_strength (int i) { if (i >= 0) pillar_strength  = i; }
 
 
