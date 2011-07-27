@@ -26,7 +26,7 @@ inline int recolor_base_color(
 
 bool Blotter::process_shape_bevel(BITMAP* piece)
 {
-    if (piece->w > texture->w || piece->h > texture->h) {
+    if (!texture || piece->w > texture->w || piece->h > texture->h) {
         return false;
     }
     // The following vector should be viewed as functions from the set of

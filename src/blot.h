@@ -31,8 +31,9 @@ public:
     void set_pillar_dampening(int);
     void set_pillar_strength (int);
     
-    bool    load_texture(const std::string&); // returns false on error
-    BITMAP* get_texture ();                   // returns 0 on error
+    bool    make_granulate(int, int, int, int); // r-g-b-granularity; 0 on err
+    bool    load_texture  (const std::string&); // returns false on error
+    BITMAP* get_texture   ();                   // returns 0 on error
     
     bool    load_shapes(const std::string&); // returns false on error
     int     get_shapes_remaining();

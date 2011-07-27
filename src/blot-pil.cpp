@@ -17,17 +17,20 @@ inline int recolor_pillar_color(
         if (extra < -cap) extra = -cap;
     }
     const double abslight = (light >= 0 ? light : -light);
-    return base
+    const int ret = base
         + extra * abslight
         + 0.5; // this is a correcting summand to counter the floor rounding
                // from the conversion double -> int
+    if      (ret <   0) return 0;
+    else if (ret > 255) return 255;
+    else                return ret;
 }
 
 
 
 bool Blotter::process_shape_pillar(BITMAP* piece)
 {
-    if (piece->w > texture->w || piece->h > texture->h) {
+    if (!texture || piece->w > texture->w || piece->h > texture->h) {
         return false;
     }
 
@@ -45,6 +48,19 @@ bool Blotter::process_shape_pillar(BITMAP* piece)
         light[i] = 1.0 - i * 2.0 / (span - 1);
     }
 
+    // Apply the texture
+    const int off_x = rand() % (texture->w - piece->w + 1);
+    const int off_y = rand() % (texture->h - piece->h + 1);
+    for  (int y = 0; y < piece->h; ++y)
+     for (int x = 0; x < piece->w; ++x) {
+        if (_getpixel32(piece, x, y) == pink) continue;
+        else {
+            _putpixel32(piece, x, y,
+             _getpixel32(texture, off_x + x, off_y + y));
+        }
+    }
+
+    // Apply the lighting effect
     for  (int s = 0; s < span;   ++s)
      for (int b = 0; b < boring; ++b) {
         const int x = horz ? s : b;

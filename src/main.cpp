@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
         
     std::cout
         << scripts_processed << "/" << argc - 1
-        << " command files successfully processed, ";
+        << " commands files successfully processed, ";
     if (error_occured) std::cout << "aborted due to error." << std::endl;
     else std::cout << images_written << " images written. " << std::endl;
 

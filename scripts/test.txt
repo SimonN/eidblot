@@ -2,7 +2,6 @@
 #bevel-dampening 2
 #bevel-strength  16
 
-$texture ./textures/tapir3.bmp
 $shapes  ./shapes/blocks.bmp
 
 $prefix ./out/008

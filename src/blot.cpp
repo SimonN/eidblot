@@ -66,8 +66,37 @@ void Blotter::set_pillar_strength (int i) { if (i >= 0) pillar_strength  = i; }
 
 
 
+bool Blotter::make_granulate(
+    const int base_r,
+    const int base_g,
+    const int base_b,
+    const int granularity
+) {
+    if (granularity < 0) return false;
+    
+    if (texture) ::destroy_bitmap(texture);
+    texture = create_bitmap(640, 640);
+    if (!texture) return false;
+    
+    for  (int x = 0; x < texture->w; ++x)
+     for (int y = 0; x < texture->h; ++y) {
+        const int rd = 2 * granularity + 1;
+        int rr = base_r + granularity - (::rand() % rd);
+        int rg = base_g + granularity - (::rand() % rd);
+        int rb = base_b + granularity - (::rand() % rd);
+        if (rr > 255) rr = 255; else if (rr < 0) rr = 0;
+        if (rg > 255) rg = 255; else if (rg < 0) rg = 0;
+        if (rb > 255) rb = 255; else if (rb < 0) rb = 0;
+        ::_putpixel32(texture, x, y, makecol32(rr, rg, rb));
+    }
+    return true;
+}
+
+
+
 bool Blotter::load_texture(const std::string& s)
 {
+    if (texture) ::destroy_bitmap(texture);
     texture = ::load_bitmap(s.c_str(), 0);
     return texture != 0;
 }
