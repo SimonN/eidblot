@@ -1,0 +1,137 @@
+
+
+All arguments to # commands are called n, and are expected to be a nonnegative
+integer.
+
+All arguments to $ commands are called str, and are expected to be a string.
+There is one $ command that doesn't use an argument.
+
+===============================================================================
+
+$mode bevel
+    Specifies bevel as the filter to be applied to all following shapes.
+
+$mode pillar-horizontal
+$mode pillar-vertical
+    Using any one of these specify one of the pillar filters to be applied to
+    all following shapes.
+    
+    Horizontal means that the top pixels will be lighter and the bottom pixels
+    will be darker, i.e. the pillar goes horizontally. Vertical means that the
+    left pixels will be lighter and the right pixels will be darker, i.e. the
+    pillar goes vertically.
+
+#bevel-thickness n
+    Sets the bevel thickness to n.
+    
+    When applying the bevel look, this specifies how far pixels may be away
+    from the edge to still be bevelled.
+    
+    If you don't specify this, the default value is 4.
+    
+#bevel-dampening n
+    Sets the bevel dampening to n.
+    
+    Higher values of dampening make the bevel effect less prevalent. If the
+    thickness is t and the dampening is d, the borderline pixels are
+    lightened/darkened in such a way that one of their color components
+    would be full/empty when lightened/darkened by t + d steps. The actual
+    number used for the borderline pixels is always t. Thus, if dampening is
+    high in comparison to thickness, the bevel effect will be less.
+    
+    If you don't specify this, the default value is 1.
+    
+#bevel-strength n
+    Sets the bevel strength to n.
+    
+    This limits the amount of change for a single color component per step.
+    What a bevel step is is described in the #bevel-dampening section above.
+    Setting a strength may be useful if you bevel very light or dark shapes,
+    so both the light and dark border will be bevelled by a similar amount.
+    Play around with this to get a feeling for it.
+    
+    If you don't use this or set it to 0, then there is no limit.
+    
+#pillar-dampening n
+    Sets the pillar dampening to n.
+    
+    The useful range for n is >= 0 and <= 120.
+    
+    If you set it to 0, then the edges of a pillarized shape will be
+    practically white or black. If you set it to 120, no effect will be
+    applied at all. Values between 0 and 120 select the strength of the
+    pillarize effect in a linear fashion.
+    
+    If you don't specify this, the default value is 60.
+
+#pillar-strength n
+    Sets the pillar strength to n.
+    
+    This specifies the maximum amount of change per color component when
+    applying the pillarize filter.
+      
+    Unlike the #bevel-dampening, this doesn't think in terms of steps.
+    
+    If you don't specify this or set it to 0, no limit is used.
+    
+#granulate-red n
+#granulate-green n
+#granulate-blue n
+#granulate-granularity n
+    Set the color and granularity of the next granular texture that is going
+    to be generated via $granulate-generate.
+    
+    Color components should be between 0 and 255 inclusive. Granularity
+    specifies the maximum random deviation in any component.
+    
+    If you don't specify a color component, it's assumed to be 0, and if you
+    don't specify granularity, it's assumed to be 16.
+
+$granulate-generate
+    Makes a granular texture of size 640 x 640 for internal use. This is not
+    written to any file, but applied to any shape that is to be processed.
+    
+    This uses the values set by the four commands explaind above this.
+
+    If you use $granulate-generate, you don't have to load a texture from
+    a file, as explained below.
+
+$texture str
+    Loads the file with filename str and uses it as a texture for all following
+    shapes. You don't have to make a granulate texture anymore if you do this.
+    
+$shapes str
+    Loads the file with filename str, cuts it into pieces, and uses each
+    piece as a shape. The shapes to be processed form a queue.
+
+    A shapes file should be only pink and black. A piece is a connected black
+    component. Pixels touching diagonally or orthogonally are connected, all
+    others are not.
+    
+    The order of the shapes from a file is determined as follows. A pixel
+    from the shapes file is earlier than another if it's in a higher row, or
+    further to the left in the same row. A piece is ordered before another if
+    its earliest pixel is earlier than the earliest pixel of the other.
+
+$prefix str
+$suffix str
+    Sets either the prefix or suffix to str.
+    
+    When producing output files with the > command below, their filename is
+    always determined as prefix + specified output filename + suffix.
+    
+    The default prefix is empty, and the default suffix is ".pcx".
+    
+    The files are always saved as PCX files, so you probably shouldn't change
+    the suffix.
+    
+> str
+    Processes the next shape from the loaded shapes file.
+    
+    This takes the shape from the queue of shapes to be processed, gives it
+    a random part of the current texture, applies the selected filter mode,
+    e.g. bevel or pillarize, and saves it under the filename prefix + str
+    + suffix.
+
+    You should load/generate a texture file and also load a shapes file
+    before doing this.

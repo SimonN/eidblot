@@ -36,10 +36,10 @@ bool Blotter::process_shape_pillar(BITMAP* piece)
 
     const bool horz = (main_mode == PILLAR_HORZ);
 
-    // horizontal means that the left will be lighter, right  will be darker.
-    // vertical   means that the top  will be lighter, bottom will be darker.
-    const int span   = horz ? piece->w : piece->h;
-    const int boring = horz ? piece->h : piece->w;
+    // horizontal means that the top  will be lighter, bottom will be darker.
+    // vertical   means that the left will be lighter, right  will be darker.
+    const int span   = horz ? piece->h : piece->w;
+    const int boring = horz ? piece->w : piece->h;
     if (span <= 1) return true;
 
     std::vector <double> light(span, 0); // max = 1.0, min = -1.0
@@ -63,8 +63,8 @@ bool Blotter::process_shape_pillar(BITMAP* piece)
     // Apply the lighting effect
     for  (int s = 0; s < span;   ++s)
      for (int b = 0; b < boring; ++b) {
-        const int x = horz ? s : b;
-        const int y = horz ? b : s;
+        const int x = horz ? b : s;
+        const int y = horz ? s : b;
         const int p = _getpixel32(piece, x, y);
         if (p == pink) continue;
         

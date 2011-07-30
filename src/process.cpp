@@ -114,7 +114,7 @@ int process(const std::vector <IO::Line>& iolines)
                     return -1;                    
                 }
             }
-            else if (l.text1 == "make-granulate-texture") {
+            else if (l.text1 == "granulate-generate") {
                 if (b.make_granulate(gran_red,  gran_green,
                                      gran_blue, gran_granu)) {
                     std::cout << "Using granulate texture with color ("
@@ -190,13 +190,18 @@ int process(const std::vector <IO::Line>& iolines)
                 if (shape == 0 && !txtr)
                     std::cout << "Error: No texture or shapes available."
                     << std::endl;
-                else if (shape == 0)
-                     std::cout << "Error: No shapes available." << std::endl;
+                else if (shape == 0 && !newb_shapes_loaded) {
+                    std::cout << "Error: No shapes available." << std::endl;
+                }
+                else if (shape == 0 && newb_shapes_loaded) {
+                    std::cout << "Error: No more shapes left." << std::endl;
+                }
                 else std::cout << "Error: No texture available." << std::endl;                
-                std::cout << "Every commands file must first "
+                if (!txtr || !newb_shapes_loaded)
+                    std::cout << "Every commands file must first "
                     << (!txtr ? "load/generate a texture" : "")
-                    << (!txtr && shape == 0 ? " and " : "")
-                    << (shape == 0 ? "load a shapes file" : "")
+                    << (!txtr && !newb_shapes_loaded ? " and " : "")
+                    << (!newb_shapes_loaded ? "load a shapes file" : "")
                     << "." << std::endl << "Before doing so, "
                     << "no output commands (`>' lines) may be specified."
                     << std::endl;                    

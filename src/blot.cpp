@@ -60,6 +60,7 @@ void Blotter::set_bevel_strength (int i) { if (i >= 0) bevel_strength  = i; }
 void Blotter::set_pillar_dampening(int i)
 {
     if (i >= 0) pillar_dampening_of_120 = i;
+    if (pillar_dampening_of_120 > 120) pillar_dampening_of_120 = 120;
 }
 
 void Blotter::set_pillar_strength (int i) { if (i >= 0) pillar_strength  = i; }
@@ -79,7 +80,7 @@ bool Blotter::make_granulate(
     if (!texture) return false;
     
     for  (int x = 0; x < texture->w; ++x)
-     for (int y = 0; x < texture->h; ++y) {
+     for (int y = 0; y < texture->h; ++y) {
         const int rd = 2 * granularity + 1;
         int rr = base_r + granularity - (::rand() % rd);
         int rg = base_g + granularity - (::rand() % rd);
