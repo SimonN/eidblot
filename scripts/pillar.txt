@@ -1,15 +1,27 @@
-#granulate-red 96
-#granulate-green 196
-#granulate-blue 64
-#granulate-granularity 16
+#granulate-red 32
+#granulate-green 192
+#granulate-blue 96
+#granulate-granularity 10
 $granulate-generate
 
-#pillar-dampening 60
+#pillar-dampening 70
 
 $shapes ./shapes/pillar.bmp
-
 $mode pillar-horizontal
-$prefix ./out/grah
+
+$prefix ./out/gr_ph
+> 016s
+> 016
+> 032s
+> 032
+> 048s
+> 048
+> 064s
+> 064
+> 128s
+> 128
+$mode pillar-vertical
+$prefix ./out/gr_pv
 > 016s
 > 016
 > 032s
@@ -21,8 +33,27 @@ $prefix ./out/grah
 > 128s
 > 128
 
+#granulate-red 192
+#granulate-green 192
+#granulate-blue 192
+#granulate-granularity 10
+$granulate-generate
+
+$shapes ./shapes/pillar.bmp
+$mode pillar-horizontal
+$prefix ./out/wh_ph
+> 016s
+> 016
+> 032s
+> 032
+> 048s
+> 048
+> 064s
+> 064
+> 128s
+> 128
 $mode pillar-vertical
-$prefix ./out/grav
+$prefix ./out/wh_pv
 > 016s
 > 016
 > 032s
