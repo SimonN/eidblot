@@ -12,25 +12,25 @@
 int process(const std::vector <IO::Line>& iolines)
 {
     Blotter b;
-    
+
     std::string prefix = "";
     std::string suffix = ".pcx";
-    
+
     int gran_red   = 0;
     int gran_green = 0;
     int gran_blue  = 0;
     int gran_granu = 16;
-    
+
     // these are just to give a better error message to help newb users
     bool newb_shapes_loaded  = false;
-        
+
     int images_written = 0;
-    
+
     for (std::vector <IO::Line> ::const_iterator lineitr = iolines.begin();
         lineitr != iolines.end(); ++lineitr)
     {
         const IO::Line l = *lineitr;
-        
+
         if (l.type == '#') {
             if (l.nr1 < 0) {
                 std::cout << "Error: ``#" << l.text1
@@ -90,9 +90,8 @@ int process(const std::vector <IO::Line>& iolines)
                 return -1;
             }
         }
-        
         else if (l.type == '$') {
-            if      (l.text1 == "prefix") prefix = l.text2; 
+            if      (l.text1 == "prefix") prefix = l.text2;
             else if (l.text1 == "suffix") suffix = l.text2;
             else if (l.text1 == "mode") {
                 if (l.text2 == "bevel") {
@@ -108,10 +107,14 @@ int process(const std::vector <IO::Line>& iolines)
                     b.set_main_mode(Blotter::PILLAR_VERT);
                     std::cout << "Pillar-Vertical mode selected." << std::endl;
                 }
+                else if (l.text2 == "raw") {
+                    b.set_main_mode(Blotter::RAW);
+                    std::cout << "Raw output mode selected." << std::endl;
+                }
                 else {
                     std::cout << "Error: ``" << l.text2
                         << "'' is an unknown mode." << std::endl;
-                    return -1;                    
+                    return -1;
                 }
             }
             else if (l.text1 == "granulate-generate") {
@@ -124,6 +127,33 @@ int process(const std::vector <IO::Line>& iolines)
                 }
                 else {
                     std::cout << "Error: Couldn't make granulate texture."
+                        << std::endl;
+                    return -1;
+                }
+            }
+            else if (l.text1 == "voronoi-generate") {
+                if (b.make_voronoi(white, black, 30, pos(128, 128), 4, 2.0)) {
+                    std::cout << "Using voronoi texture with color ("
+                        << gran_red  << ", " << gran_green << ", "
+                        << gran_blue << ") and granularity "
+                        << gran_granu << "." << std::endl;
+                }
+                else {
+                    std::cout << "Error: Couldn't make voronoi texture."
+                        << std::endl;
+                    return -1;
+                }
+            }
+            else if (l.text1 == "voronoi-generate-shaded") {
+                if (b.make_voronoi_shaded(
+                        white, black, 30, pos(128, 128), 4, 2.0)) {
+                    std::cout << "Using voronoi texture with color ("
+                        << gran_red  << ", " << gran_green << ", "
+                        << gran_blue << ") and granularity "
+                        << gran_granu << "." << std::endl;
+                }
+                else {
+                    std::cout << "Error: Couldn't make voronoi texture."
                         << std::endl;
                     return -1;
                 }
@@ -158,7 +188,7 @@ int process(const std::vector <IO::Line>& iolines)
                 return -1;
             }
         }
-        
+
         else if (l.type == '>') {
             bool txtr = b.get_texture();
             BITMAP* shape = b.pop_shape_caller_should_destroy_it_later();
@@ -196,7 +226,7 @@ int process(const std::vector <IO::Line>& iolines)
                 else if (shape == 0 && newb_shapes_loaded) {
                     std::cout << "Error: No more shapes left." << std::endl;
                 }
-                else std::cout << "Error: No texture available." << std::endl;                
+                else std::cout << "Error: No texture available." << std::endl;
                 if (!txtr || !newb_shapes_loaded)
                     std::cout << "Every commands file must first "
                     << (!txtr ? "load/generate a texture" : "")
@@ -204,7 +234,7 @@ int process(const std::vector <IO::Line>& iolines)
                     << (!newb_shapes_loaded ? "load a shapes file" : "")
                     << "." << std::endl << "Before doing so, "
                     << "no output commands (`>' lines) may be specified."
-                    << std::endl;                    
+                    << std::endl;
                 if (shape) ::destroy_bitmap(shape);
                 return -1;
             }

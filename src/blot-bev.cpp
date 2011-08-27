@@ -19,7 +19,7 @@ inline int recolor_base_color(
         color_new = base +     base     * light / thick;
         if (cap && color_new - base < cap * light) return base + cap * light;
         else                                       return color_new;
-    }    
+    }
 }
 
 
@@ -147,6 +147,18 @@ bool Blotter::process_shape_bevel(BITMAP* piece)
              recolor_base_color(getr32(p), edge[eXy], extra_thickness, str),
              recolor_base_color(getg32(p), edge[eXy], extra_thickness, str),
              recolor_base_color(getb32(p), edge[eXy], extra_thickness, str)));
+        }
+    }
+    return true;
+}
+
+bool Blotter::process_shape_raw(BITMAP* piece) {
+    for  (int y = 0; y < piece->h; ++y)
+     for (int x = 0; x < piece->w; ++x) {
+        if (_getpixel32(piece, x, y) == pink) continue;
+        else {
+            _putpixel32(piece, x, y,
+             _getpixel32(texture, x, y));
         }
     }
     return true;

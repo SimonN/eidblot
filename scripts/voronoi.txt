@@ -1,0 +1,16 @@
+$voronoi-generate-shaded
+
+$shapes ./shapes/128.bmp
+
+$mode raw
+$prefix ./out/voronois
+> 128
+
+$voronoi-generate
+
+$shapes ./shapes/128.bmp
+
+$mode raw
+$prefix ./out/voronoip
+> 128
+

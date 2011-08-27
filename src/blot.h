@@ -4,6 +4,7 @@
 #include <string>
 #include <set>
 #include <list>
+#include "color.h"
 
 class Blotter {
 
@@ -12,11 +13,12 @@ public:
     enum MainMode {
         BEVEL,
         PILLAR_HORZ,
-        PILLAR_VERT
+        PILLAR_VERT,
+        RAW
     };
 
     static void initialize();
-    
+
     static int pink;
 
     Blotter();
@@ -27,26 +29,36 @@ public:
     void set_bevel_thickness(int);
     void set_bevel_dampening(int);
     void set_bevel_strength (int);
-    
+
     void set_pillar_dampening(int);
     void set_pillar_strength (int);
-    
+
     bool    make_granulate(int, int, int, int); // r-g-b-granularity; 0 on err
+    /* light color, dark color,
+     * amount of dots, size, thinness,
+     * p of the p-norm to be used for the induced metric */
+    bool    make_voronoi(color, color, int, pos, int, double = 2.0);
+    // same as above, however like shaded tiles
+    bool    make_voronoi_shaded(color, color, int, pos, int, double = 2.0);
+    // generates a matrix containing a shading factor
+    // and an angle for each pixel
+    std::vector<std::vector<std::pair<double,double> > >
+        make_voronoi_table(int, pos, int, double = 2.0);
     bool    load_texture  (const std::string&); // returns false on error
     BITMAP* get_texture   ();                   // returns 0 on error
-    
+
     bool    load_shapes(const std::string&); // returns false on error
     int     get_shapes_remaining();
     BITMAP* pop_shape_caller_should_destroy_it_later(); // returns 0 on error
 
     bool process_shape(BITMAP*); // modifies the bitmap, returns 0 on error,
-                                 // which means the texture is too small    
+                                 // which means the texture is too small
 private:
 
     typedef std::pair <int, int> Xy;
     typedef std::set  <Xy>       Xyset;
     typedef std::list <BITMAP*>  Bitlist;
-    
+
     struct Area {
         BITMAP* ground;
         Xyset   Xy;
@@ -61,14 +73,14 @@ private:
     };
 
     MainMode main_mode;
-    
+
     int bevel_thickness;
     int bevel_dampening;
     int bevel_strength;
-    
+
     int pillar_dampening_of_120;
     int pillar_strength;
-    
+
     BITMAP* texture;
     Bitlist shapes;
 
@@ -79,6 +91,7 @@ private:
 
     bool process_shape_bevel (BITMAP*);
     bool process_shape_pillar(BITMAP*);
+    bool process_shape_raw(BITMAP*);
 
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////

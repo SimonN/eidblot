@@ -1,7 +1,8 @@
 #include <vector>
 
 #include "blot.h"
-
+#include <cstdlib>
+#include <cmath>
 
 
 int Blotter::pink(0);
@@ -19,14 +20,14 @@ void Blotter::initialize()
 Blotter::Blotter()
 :
     main_mode(BEVEL),
-    
+
     bevel_thickness(4),
     bevel_dampening(1),
     bevel_strength (0),
-    
+
     pillar_dampening_of_120(30),
     pillar_strength       (0),
-    
+
     texture  (0)
 {
 }
@@ -74,11 +75,11 @@ bool Blotter::make_granulate(
     const int granularity
 ) {
     if (granularity < 0) return false;
-    
+
     if (texture) ::destroy_bitmap(texture);
     texture = create_bitmap(640, 640);
     if (!texture) return false;
-    
+
     for  (int x = 0; x < texture->w; ++x)
      for (int y = 0; y < texture->h; ++y) {
         const int rd = 2 * granularity + 1;
@@ -94,6 +95,171 @@ bool Blotter::make_granulate(
 }
 
 
+std::vector<std::vector<std::pair<double,double> > > Blotter::make_voronoi_table(
+    const int amount,
+    const pos size,
+    const int thinness,
+    const double norm
+) {
+    std::vector<std::vector<std::pair<double,double> > > matrix(
+        size.x, std::vector<std::pair<double,double> >(
+            size.y, std::pair<double,double>(0, 0)));
+
+    std::vector<pos> dots;
+
+    /* generate dot positions with minimum distance between them
+     * dots are duplicated in all 8 directions, so it tesselates */
+    srand(22934);
+    double mindist = 2*std::sqrt(texture->w * texture->h / (16 * amount));
+    for (int i = 0; i < amount; ++i) {
+      retry:
+        int base_x = rand() % size.x;
+        int base_y = rand() % size.y;
+        pos p(base_x, base_y);
+        for (int j = 0; j < 9*i; ++j)
+            if (dist(p, dots[j], norm) < mindist) goto retry;
+        for (int x = -texture->w; x <= texture->w ; x += texture->w)
+            for (int y = -texture->h; y <= texture->h ; y += texture->h)
+                dots.push_back(pos(base_x + x, base_y + y));
+    }
+
+    // calculate the matrix
+    for (int x = 0; x < texture->w; ++x)
+        for (int y = 0; y < texture->h; ++y) {
+            double mindist = 999999, mindist2 = 999999, mindist3 = 999999;
+            double minangle, minangle2, minangle3;
+            int minindex, minindex2, minindex3;
+            //determine closes point
+            for (int i = 0; i < 9*amount; ++i) {
+                double d = dist(pos(x,y), dots[i], norm);
+                if (d < mindist) {
+                    minindex = i;
+                    mindist = d;
+                    minangle = angle(pos(x,y), dots[i]);
+                }
+            }
+            pos q = dots[minindex];
+            // determine closes remaining point that doesn't lie behind
+            // first one when seen from (x,y)
+            for (int i = 0; i < 9*amount; ++i) {
+                if (dots[i].x == dots[minindex].x
+                        && dots[i].y == dots[minindex].y) continue;
+                double d = dist(pos(x,y), dots[i], norm);
+                if (d < mindist2) {
+                    double angl = angle(dots[minindex], dots[i]);
+                    double da = std::fabs(angl - minangle);
+                    if (da > PI/2 && da < 3*PI/2) { // far apart
+                        mindist2 = d;
+                        minangle2 = angl;
+                        minindex2 = i;
+                    }
+                }
+            }
+            pos p = dots[minindex2];
+            // determine closes remaining point that lies one the same side as
+            // (x,y) relative to the line determined by the previous 2 dots
+            for (int i = 0; i < 9*amount; ++i) {
+                if (dots[i].x == dots[minindex].x
+                        && dots[i].y == dots[minindex].y) continue;
+                if (dots[i].x == dots[minindex2].x
+                        && dots[i].y == dots[minindex2].y) continue;
+                double d = dist(pos(x,y), dots[i], norm);
+                if (d < mindist3) {
+                    if (area(p, q, dots[i]) * area(p, q, pos(x,y)) < 0)
+                        continue;
+                    mindist3 = d;
+                    minangle3 = angle(dots[minindex], dots[i]);
+                    minindex3 = i;
+                }
+            }
+            pos r = dots[minindex3];
+            pos v = p - q;
+            pos b(x, y);
+            double coef = calc_voronoi_lambda(q, p-q, b, thinness);
+            double angl = angle(p, q);
+            double coef2 = std::max(coef, calc_voronoi_lambda(r, q-r, b, thinness));
+            if (coef2 > coef) {
+                coef = coef2;
+                angl = angle(r, q);
+            }
+            matrix[x][y].first  = std::max(0.0, coef);
+            matrix[x][y].second = angl;
+        }
+
+    return matrix;
+}
+
+
+double calc_voronoi_lambda(pos q, pos v, pos b, int thinness) {
+    //when orthigonally projected onto the line with start position q
+    // and direction v, lambda is the coefficient so that the projection
+    // of b is q + lambda*v
+    double lambda = 0;
+    if (v.y == 0) lambda = (q.x-b.x)/v.x;
+    else lambda = -((q.x-b.x)*v.x/ (double)v.y + q.y-b.y)
+        /(double)(v.x*v.x/(double)v.y+v.y);
+    // turn it into a shading coefficient
+    return 1-thinness*std::abs(2*lambda-1);
+}
+
+
+bool Blotter::make_voronoi(
+    const color cl,
+    const color cd,
+    const int amount,
+    const pos size,
+    const int thinness,
+    const double norm
+) {
+    if (norm <= 0) return false;
+    if (amount <= 2) return false;
+
+    if (texture) ::destroy_bitmap(texture);
+    texture = create_bitmap(size.x, size.y);
+    if (!texture) return false;
+
+    std::vector<std::vector<std::pair<double,double> > > matrix
+        = make_voronoi_table(amount, size, thinness, norm);
+
+    for (int x = 0; x < texture->w; ++x)
+        for (int y = 0; y < texture->h; ++y) {
+            color ci = interpolate(cl, cd, matrix[x][y].first);
+            ::_putpixel32(texture, x, y, makecol32(ci));
+        }
+    return true;
+}
+
+
+
+bool Blotter::make_voronoi_shaded(
+    const color cl,
+    const color cd,
+    const int amount,
+    const pos size,
+    const int thinness,
+    const double norm
+) {
+    if (norm <= 0) return false;
+    if (amount <= 2) return false;
+
+    if (texture) ::destroy_bitmap(texture);
+    texture = create_bitmap(size.x, size.y);
+    if (!texture) return false;
+
+    std::vector<std::vector<std::pair<double,double> > > matrix
+        = make_voronoi_table(amount, size, thinness, norm);
+
+    for (int x = 0; x < texture->w; ++x)
+        for (int y = 0; y < texture->h; ++y) {
+            color cm = interpolate(cl, cd, 0.5);
+            double angl = matrix[x][y].second - PI/4;
+            double shade = cos(angl)/2 + 0.5;
+            color ci = interpolate(cl, cd, shade);
+            ci = interpolate(ci, cm, matrix[x][y].first);
+            ::_putpixel32(texture, x, y, makecol32(ci));
+        }
+    return true;
+}
 
 bool Blotter::load_texture(const std::string& s)
 {
@@ -108,13 +274,13 @@ BITMAP* Blotter::get_texture()
 {
     return texture;
 }
-    
-    
+
+
 
 bool Blotter::load_shapes(const std::string& s)
 {
     destroy_all_shapes();
-    
+
     BITMAP* sheet = load_bitmap(s.c_str(), 0);
     if (!sheet) return false;
     else {
@@ -140,8 +306,8 @@ BITMAP* Blotter::pop_shape_caller_should_destroy_it_later()
     shapes.erase(shapes.begin());
     return first;
 }
-    
-    
+
+
 
 bool Blotter::cut_into_list(BITMAP* shapebit)
 {
@@ -230,6 +396,7 @@ void Blotter::fill_area_with_color(const Blotter::Area& area, const int color)
 
 bool Blotter::process_shape(BITMAP* piece)
 {
-    if (main_mode == BEVEL) return process_shape_bevel (piece);
-    else                    return process_shape_pillar(piece);
+    if      (main_mode == RAW)   return process_shape_raw   (piece);
+    else if (main_mode == BEVEL) return process_shape_bevel (piece);
+    else                         return process_shape_pillar(piece);
 }
