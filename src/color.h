@@ -18,14 +18,13 @@ struct pos {
     int x, y;
 
     pos(int x, int y);
-    double norm(double);
+    double norm(double = 2.0);
 };
 
 pos operator+(pos p1, pos p2);
 pos operator-(pos p1, pos p2);
 
-double dist(pos, pos, double);
+double dist(pos, pos, double = 2.0);
 double angle(pos, pos);
 double area(pos, pos, pos);
 
-double  calc_voronoi_lambda(pos, pos, pos, int);

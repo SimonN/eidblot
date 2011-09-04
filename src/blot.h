@@ -59,6 +59,10 @@ private:
     typedef std::set  <Xy>       Xyset;
     typedef std::list <BITMAP*>  Bitlist;
 
+    double calc_ortho_lambda(pos, pos, pos);
+    double calc_voronoi_lambda(pos, pos, pos, int);
+    double voronoi_antialiased_angle(pos, pos, pos);
+
     struct Area {
         BITMAP* ground;
         Xyset   Xy;

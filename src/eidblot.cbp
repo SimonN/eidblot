@@ -8,9 +8,11 @@
 		<Build>
 			<Target title="Debug">
 				<Option output="..\bin\eidblot" prefix_auto="1" extension_auto="1" />
+				<Option working_dir=".." />
 				<Option object_output="..\bin\obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="scripts/voronoi.txt" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -27,6 +29,8 @@
 		<Unit filename="blot-pil.cpp" />
 		<Unit filename="blot.cpp" />
 		<Unit filename="blot.h" />
+		<Unit filename="color.cpp" />
+		<Unit filename="color.h" />
 		<Unit filename="io.cpp" />
 		<Unit filename="io.h" />
 		<Unit filename="main.cpp" />

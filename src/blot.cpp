@@ -176,11 +176,11 @@ std::vector<std::vector<std::pair<double,double> > > Blotter::make_voronoi_table
             pos v = p - q;
             pos b(x, y);
             double coef = calc_voronoi_lambda(q, p-q, b, thinness);
-            double angl = angle(p, q);
+            double angl = voronoi_antialiased_angle(p, q, b);
             double coef2 = std::max(coef, calc_voronoi_lambda(r, q-r, b, thinness));
             if (coef2 > coef) {
                 coef = coef2;
-                angl = angle(r, q);
+                angl = voronoi_antialiased_angle(r, q, b);
             }
             matrix[x][y].first  = std::max(0.0, coef);
             matrix[x][y].second = angl;
@@ -189,8 +189,47 @@ std::vector<std::vector<std::pair<double,double> > > Blotter::make_voronoi_table
     return matrix;
 }
 
+double Blotter::voronoi_antialiased_angle(pos p, pos q, pos b) {
+    pos v = p-q;
+    //when orthigonally projected onto the line with start position q
+    // and direction v, lambda is the coefficient so that the projection
+    // of b is q + lambda*v
+    double lambda = calc_ortho_lambda(q, v, b);
+    double d = (1-2*lambda) * v.norm() + 0.5;
 
-double calc_voronoi_lambda(pos q, pos v, pos b, int thinness) {
+    //double d = dist(b, p) - dist(b, q);
+    double angl = angle(p, q);
+    if (d >= 1.0)
+        return angl;
+    double negangl = angle(q, p);
+    /*
+    // move angle into interval [-PI/4, 3*PI/4] by mirroring along the
+    // y = -x axis if it is outside that interval (math coords)
+    if (angl < -PI/4)
+        angl = -PI/2 - angl;
+    else if (angl > 3*PI/4)
+        angl = -3*PI/2 - angl;
+    if (negangl < -PI/4)
+        negangl = -PI/2 - negangl;
+    else if (negangl > 3*PI/4)
+        negangl = -3*PI/2 - negangl;
+    */
+    // move angle into interval [-3*PI/4, PI/4] by mirroring along the
+    // y = -x axis if it is outside that interval (screen coords)
+    if (angl > PI/4)
+        angl = PI/2 - angl;
+    else if (angl < -3*PI/4)
+        angl = -3*PI/2 - angl;
+    if (negangl > PI/4)
+        negangl = PI/2 - negangl;
+    else if (negangl < -3*PI/4)
+        negangl = -3*PI/2 - negangl;
+    // interpolate between the two angles
+    return d * angl + (1-d) * negangl;
+}
+
+
+double Blotter::calc_ortho_lambda(pos q, pos v, pos b) {
     //when orthigonally projected onto the line with start position q
     // and direction v, lambda is the coefficient so that the projection
     // of b is q + lambda*v
@@ -198,6 +237,11 @@ double calc_voronoi_lambda(pos q, pos v, pos b, int thinness) {
     if (v.y == 0) lambda = (q.x-b.x)/v.x;
     else lambda = -((q.x-b.x)*v.x/ (double)v.y + q.y-b.y)
         /(double)(v.x*v.x/(double)v.y+v.y);
+    return lambda;
+}
+
+double Blotter::calc_voronoi_lambda(pos q, pos v, pos b, int thinness) {
+    double lambda = calc_ortho_lambda(q, v, b);
     // turn it into a shading coefficient
     return 1-thinness*std::abs(2*lambda-1);
 }
