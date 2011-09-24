@@ -25,8 +25,8 @@ Blotter::Blotter()
     bevel_dampening(1),
     bevel_strength (0),
 
-    pillar_dampening_of_120(30),
-    pillar_strength       (0),
+    pillar_dampening_of_120(60),
+    pillar_strength        (0),
 
     texture  (0)
 {

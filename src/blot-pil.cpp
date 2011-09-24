@@ -11,7 +11,7 @@ inline int recolor_pillar_color(
     double extra;
     if (light > 0) extra = (255 - base) * (120 - dampening) / 120.0;
     else           extra = - base       * (120 - dampening) / 120.0;
-    
+
     if (cap) {
         if (extra >  cap) extra = cap;
         if (extra < -cap) extra = -cap;
@@ -24,6 +24,24 @@ inline int recolor_pillar_color(
     if      (ret <   0) return 0;
     else if (ret > 255) return 255;
     else                return ret;
+}
+
+
+
+inline double parabola(double x)
+{
+    // map [-1, 1] to a nice parabola, surjectively onto [-1, 1]
+
+    // intensify stuff left of 0.5 by a factor of 2-3
+    if (x < -0.5) x = (x + 0.5) * 2.5 - 0.5;
+
+    // make a parabola that has its tip at (-0.5, 1) and extends to the bottom
+    // at (-2, -1) and (1, -1). The x = -2 is really x = -1 due to the above
+    // stretching. Parabola thus must go down by 2 when going forward 1.5.
+    //   a * (1.5 ^ 2) = 2
+    // solves to
+    //   a = 8/9 ~= 0.8888
+    return 1 - 0.8888 * (x + 0.5) * (x + 0.5);
 }
 
 
@@ -44,8 +62,11 @@ bool Blotter::process_shape_pillar(BITMAP* piece)
 
     std::vector <double> light(span, 0); // max = 1.0, min = -1.0
     for (int i = 0; i < span; ++i) {
-        // linear from +1.0 to -1.0
-        light[i] = 1.0 - i * 2.0 / (span - 1);
+        // linear from -1.0 to +1.0
+        light[i] = -1.0 + i * 2.0 / (span - 1);
+
+        // apply a nice effect
+        light[i] = parabola(light[i]);
     }
 
     // Apply the texture
@@ -67,7 +88,7 @@ bool Blotter::process_shape_pillar(BITMAP* piece)
         const int y = horz ? s : b;
         const int p = _getpixel32(piece, x, y);
         if (p == pink) continue;
-        
+
         const int& arg1 = pillar_dampening_of_120;
         const int& arg2 = pillar_strength;
         _putpixel32(piece, x, y, makecol32(

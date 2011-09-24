@@ -1,8 +1,9 @@
 #granulate-red 196
 #granulate-green 128
 #granulate-blue 32
-#granulate-granularity 16
+#granulate-granularity 12
 $granulate-generate
+
 
 $shapes ./shapes/pillar.bmp
 
