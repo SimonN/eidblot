@@ -1,14 +1,15 @@
-#granulate-red 196
-#granulate-green 128
-#granulate-blue 32
-#granulate-granularity 12
+#granulate-red 96
+#granulate-green 196
+#granulate-blue 64
+#granulate-granularity 16
 $granulate-generate
 
+#pillar-dampening 60
 
 $shapes ./shapes/pillar.bmp
 
 $mode pillar-horizontal
-$prefix ./out/ph
+$prefix ./out/grah
 > 016s
 > 016
 > 032s
@@ -21,7 +22,7 @@ $prefix ./out/ph
 > 128
 
 $mode pillar-vertical
-$prefix ./out/pv
+$prefix ./out/grav
 > 016s
 > 016
 > 032s
